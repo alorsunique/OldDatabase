@@ -15,45 +15,84 @@ def create_sqlite_database(filename):
         if connector:
             connector.close()
 
-def create_table(database):
-    sql = [
-        """CREATE TABLE IF NOT EXISTS name_number (
+
+def create_table(database_name, table_name):
+    sql = f"""CREATE TABLE IF NOT EXISTS {table_name} (
                 id INTEGER PRIMARY KEY, 
                 name text NOT NULL, 
-                random_number INT
-        );"""]
+                number INTEGER
+        );"""
 
     try:
-        with sqlite3.connect(database) as connector:
-            cursor = connector.cursor()
-            for command in sql:
-                cursor.execute(command)
+        connector = sqlite3.connect(database_name)
+        cursor = connector.cursor()
 
-            connector.commit()
+        cursor.execute(sql)
+        cursor.close()
+        connector.commit()
     except sqlite3.Error as error:
         print(error)
 
-if __name__ == "__main__":
-    print(__name__)
+
+def show_all_table(database_name):
+
+    try:
+        connector = sqlite3.connect(database_name)
+        cursor = connector.cursor()
+
+        cursor.execute("SELECT name FROM sqlite_master WHERE type='table'")
+        table_list = cursor.fetchall()
+
+        return table_list
+
+    except sqlite3.Error as error:
+        print(error)
+
+def show_table_content(database_name, table_name):
+    connector = sqlite3.connect(database_name)
+    cursor = connector.cursor()
+
+    cursor.execute(f"SELECT * FROM {table_name}")
+    print(cursor.fetchall())
+
+def remove_table(database_name, table_name):
+    connector = sqlite3.connect(database_name)
+    cursor = connector.cursor()
+
+    cursor.execute(f"DROP TABLE IF EXISTS {table_name};")
+
+
+def main_loop():
 
     database_name = "test.db"
-
     create_sqlite_database(database_name)
 
-    create_table(database_name)
+    continue_condition = True
 
-    connector = sqlite3.connect(database_name)
+    while continue_condition:
 
-    sql = ''' INSERT INTO name_number(name,random_number)
-                  VALUES(?,?) '''
+        print(f"Tables: {show_all_table(database_name)}")
 
-    project = ("AAAAA","123")
+        print(f"0. Exit")
+        print(f"1. Add Table")
+        print(f"2. Remove Table")
+        print(f"3. Explore Table")
 
-    cursor = connector.cursor()
-    cursor.execute(sql,project)
-    connector.commit()
 
-    cursor_id = cursor.lastrowid
+        choice = str(input("Input: "))
 
-    print(cursor_id)
+        if choice == "0":
+            continue_condition = False
+        elif choice == "1":
+            table_name = input(f"Input table name: ")
+            create_table(database_name,table_name)
+        elif choice == "2":
+            table_name = input(f"Input table name: ")
+            remove_table(database_name, table_name)
+        else:
+            print(f"Did not catch that")
 
+
+
+if __name__ == "__main__":
+    main_loop()
