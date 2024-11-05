@@ -28,11 +28,47 @@ def initialize_table(database_name):
         print("Failed to create tables:", e)
 
 
+def add_daily_task(database_name):
+    add_task_text = f"""INSERT INTO daily_task(task_id, name, status)
+                    VALUES (?,?,?)
+    """
+
+    daily_task_list = [
+        (1,"Meditate Course","Pending"),
+        (2,"Meditate Appreciate","Pending"),
+        (3,"Duolingo","Pending"),
+        (4,"Workout","Pending")
+    ]
+
+    try:
+        with sqlite3.connect(database_name) as connection:
+            cursor = connection.cursor()
+            for task in daily_task_list:
+                cursor.execute(add_task_text,task)
+            connection.commit()
+
+    except sqlite3.OperationalError as e:
+        print("Failed to create tables:", e)
+
+def show_table_content(database_name, table_name):
+    connector = sqlite3.connect(database_name)
+    cursor = connector.cursor()
+
+    cursor.execute(f"SELECT * FROM {table_name}")
+
+    table_content = cursor.fetchall()
+    cursor.close()
+    connector.close()
+
+    return table_content
+
 def main_loop():
     database_name = "daily.db"
     create_sqlite_database(database_name)
     initialize_table(database_name)
-
+    add_daily_task(database_name)
+    content = show_table_content(database_name,"daily_task")
+    print(content)
 
 if __name__ == "__main__":
     main_loop()
